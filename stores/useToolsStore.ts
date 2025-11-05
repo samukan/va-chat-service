@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { defaultVectorStore } from "@/config/constants";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { defaultVectorStore } from '@/config/constants';
 
 type File = {
   id: string;
@@ -16,11 +16,13 @@ type VectorStore = {
 
 export type WebSearchConfig = {
   user_location?: {
-    type: "approximate";
+    type: 'approximate';
     country?: string;
     city?: string;
     region?: string;
   };
+  // Comma-separated domains in UI -> stored as array here
+  allowed_domains?: string[];
 };
 
 export type McpConfig = {
@@ -68,19 +70,20 @@ interface StoreState {
 const useToolsStore = create<StoreState>()(
   persist(
     (set) => ({
-      vectorStore: defaultVectorStore.id !== "" ? defaultVectorStore : null,
+      vectorStore: defaultVectorStore.id !== '' ? defaultVectorStore : null,
       webSearchConfig: {
         user_location: {
-          type: "approximate",
-          country: "",
-          city: "",
-          region: "",
+          type: 'approximate',
+          country: '',
+          city: '',
+          region: '',
         },
+        allowed_domains: [],
       },
       mcpConfig: {
-        server_label: "",
-        server_url: "",
-        allowed_tools: "",
+        server_label: '',
+        server_url: '',
+        allowed_tools: '',
         skip_approval: true,
       },
       fileSearchEnabled: false,
@@ -114,7 +117,7 @@ const useToolsStore = create<StoreState>()(
       setMcpConfig: (config) => set({ mcpConfig: config }),
     }),
     {
-      name: "tools-store",
+      name: 'tools-store',
     }
   )
 );

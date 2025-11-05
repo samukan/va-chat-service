@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import useToolsStore from "@/stores/useToolsStore";
-import { Input } from "./ui/input";
-import CountrySelector from "./country-selector";
+import React from 'react';
+import useToolsStore from '@/stores/useToolsStore';
+import { Input } from './ui/input';
+import CountrySelector from './country-selector';
 
 export default function WebSearchSettings() {
   const { webSearchConfig, setWebSearchConfig } = useToolsStore();
@@ -11,27 +11,36 @@ export default function WebSearchSettings() {
   const handleClear = () => {
     setWebSearchConfig({
       user_location: {
-        type: "approximate",
-        country: "",
-        region: "",
-        city: "",
+        type: 'approximate',
+        country: '',
+        region: '',
+        city: '',
       },
+      allowed_domains: [],
     });
   };
 
   const handleLocationChange = (
-    field: "country" | "region" | "city",
+    field: 'country' | 'region' | 'city',
     value: string
   ) => {
     setWebSearchConfig({
       ...webSearchConfig,
       user_location: {
-        type: "approximate",
+        type: 'approximate',
         ...webSearchConfig.user_location,
         [field]: value,
       },
     });
   };
+
+  const domainsToString = (arr?: string[]) =>
+    arr && arr.length ? arr.join(', ') : '';
+  const stringToDomains = (s: string) =>
+    s
+      .split(',')
+      .map((d) => d.trim().toLowerCase())
+      .filter((d) => d);
 
   return (
     <div>
@@ -50,8 +59,8 @@ export default function WebSearchSettings() {
             Country
           </label>
           <CountrySelector
-            value={webSearchConfig.user_location?.country ?? ""}
-            onChange={(value) => handleLocationChange("country", value)}
+            value={webSearchConfig.user_location?.country ?? ''}
+            onChange={(value) => handleLocationChange('country', value)}
           />
         </div>
 
@@ -64,8 +73,8 @@ export default function WebSearchSettings() {
             type="text"
             placeholder="Region"
             className="bg-white border text-sm flex-1 text-zinc-900 placeholder:text-zinc-400"
-            value={webSearchConfig.user_location?.region ?? ""}
-            onChange={(e) => handleLocationChange("region", e.target.value)}
+            value={webSearchConfig.user_location?.region ?? ''}
+            onChange={(e) => handleLocationChange('region', e.target.value)}
           />
         </div>
 
@@ -78,9 +87,35 @@ export default function WebSearchSettings() {
             type="text"
             placeholder="City"
             className="bg-white border text-sm flex-1 text-zinc-900 placeholder:text-zinc-400"
-            value={webSearchConfig.user_location?.city ?? ""}
-            onChange={(e) => handleLocationChange("city", e.target.value)}
+            value={webSearchConfig.user_location?.city ?? ''}
+            onChange={(e) => handleLocationChange('city', e.target.value)}
           />
+        </div>
+
+        <div className="h-px bg-stone-200 my-3" />
+        <div className="flex items-start gap-2">
+          <label htmlFor="allowed-domains" className="text-sm w-20 pt-2">
+            Allowed domains
+          </label>
+          <div className="flex-1">
+            <Input
+              id="allowed-domains"
+              type="text"
+              placeholder="e.g. opiskelijan.metropolia.fi, metropolia.fi"
+              className="bg-white border text-sm w-full text-zinc-900 placeholder:text-zinc-400"
+              value={domainsToString(webSearchConfig.allowed_domains)}
+              onChange={(e) =>
+                setWebSearchConfig({
+                  ...webSearchConfig,
+                  allowed_domains: stringToDomains(e.target.value),
+                })
+              }
+            />
+            <div className="text-[11px] text-zinc-400 mt-1">
+              Searches will be restricted to these domains when Web Search is
+              enabled.
+            </div>
+          </div>
         </div>
       </div>
     </div>
