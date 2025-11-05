@@ -86,10 +86,11 @@ const useToolsStore = create<StoreState>()(
         allowed_tools: '',
         skip_approval: true,
       },
-      fileSearchEnabled: false,
-      previousFileSearchEnabled: false,
-      setFileSearchEnabled: (enabled) => {
-        set({ fileSearchEnabled: enabled });
+      fileSearchEnabled: true, // Always enabled for student exchange Q&A
+      previousFileSearchEnabled: true,
+      setFileSearchEnabled: () => {
+        // Lock to always true for accuracy - parameter ignored
+        set({ fileSearchEnabled: true });
       },
       webSearchEnabled: false,
       setWebSearchEnabled: (enabled) => {
@@ -104,11 +105,11 @@ const useToolsStore = create<StoreState>()(
       setGoogleIntegrationEnabled: (enabled) => {
         set({ googleIntegrationEnabled: enabled });
       },
-      mcpEnabled: false,
+      mcpEnabled: true,
       setMcpEnabled: (enabled) => {
         set({ mcpEnabled: enabled });
       },
-      codeInterpreterEnabled: false,
+      codeInterpreterEnabled: true,
       setCodeInterpreterEnabled: (enabled) => {
         set({ codeInterpreterEnabled: enabled });
       },
