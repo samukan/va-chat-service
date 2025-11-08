@@ -38,12 +38,16 @@ export const getTools = async (toolsState: ToolsState) => {
     tools.push(webSearchTool);
   }
 
-  if (fileSearchEnabled) {
+  if (fileSearchEnabled && vectorStore?.id) {
     const fileSearchTool = {
       type: 'file_search',
-      vector_store_ids: [vectorStore?.id],
+      vector_store_ids: [vectorStore.id],
     };
     tools.push(fileSearchTool);
+  } else if (fileSearchEnabled && !vectorStore?.id) {
+    console.warn(
+      'File search enabled but no vector store configured. Skipping file search tool.'
+    );
   }
 
   if (codeInterpreterEnabled) {

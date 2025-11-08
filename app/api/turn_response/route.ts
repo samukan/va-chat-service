@@ -37,10 +37,10 @@ export async function POST(request: Request) {
 
     const { messages, toolsState } = await request.json();
 
-    // Force file search to always be enabled for accuracy
+    // Only enable file search if a vector store is configured
     const enhancedToolsState = {
       ...toolsState,
-      fileSearchEnabled: true, // Always on for student exchange Q&A
+      fileSearchEnabled: toolsState?.vectorStore?.id ? true : false,
     };
 
     const tools = await getTools(enhancedToolsState);
