@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     }
 
     // Require explicit source listing at the end of the answer for transparency
-    instructions += `\n\nCitations policy:\n- Always include a final section titled "Lähteet:" listing every source you used.\n- For file-based sources list the file names. For web sources list the full URLs and titles.\n- Do not answer without citing sources.`;
+    instructions += `\n\nCitations policy:\n- When you provide factual information, include a section titled "**Lähteet:**" at the END of your response listing every source you used.\n- For file-based sources list the file names.\n- For web sources, you MUST list the full URL and the page title. Format: [Page Title](URL).\n- If the user's message is a greeting or does not require factual information, do not include the "Lähteet:" section.`;
 
     // Track tool calls and response for validation
     let fullResponse = '';
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       // Always require tool usage for grounded answers
       tool_choice: 'required',
       stream: true,
-      parallel_tool_calls: false,
+      parallel_tool_calls: true,
     });
 
     // Create a ReadableStream that emits SSE data
@@ -101,6 +101,7 @@ export async function POST(request: Request) {
           for await (const event of events) {
             // Track response content and tool calls for validation (using any to avoid type issues)
             const eventAny = event as any;
+            console.log('Event type:', eventAny.type); // Debug logging
 
             // Collect response text
             if (eventAny.delta && typeof eventAny.delta === 'string') {

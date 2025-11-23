@@ -18,15 +18,52 @@ export function validateAnswer(
   const warnings: string[] = [];
   let confidence: 'high' | 'medium' | 'low' = 'high';
 
-  // Check if file search was used
-  const fileSearchUsed = toolCalls.some(
-    (call) =>
-      call.type === 'file_search' || call.function?.name === 'file_search'
-  );
+  const lowerAnswer = answer.toLowerCase();
+  const greetingPhrases = [
+    'hei',
+    'moi',
+    'terve',
+    'huomenta',
+    'päivää',
+    'iltaa',
+    'hello',
+    'hi',
+  ];
+  // Simple heuristic: short answer containing a greeting word
+  const isGreeting =
+    answer.trim().length < 150 &&
+    greetingPhrases.some((g) => lowerAnswer.includes(g));
 
-  if (!fileSearchUsed) {
+  if (isGreeting) {
+    // For greetings, we don't expect file search or citations
+    return { isValid: true, warnings: [], confidence: 'high' };
+  }
+
+  // Check if file search or web search was used
+  const searchToolUsed = toolCalls.some((call) => {
+    // Handle standard tool calls
+    if (
+      call.type === 'file_search' ||
+      call.function?.name === 'file_search' ||
+      call.type === 'web_search' ||
+      call.function?.name === 'web_search'
+    ) {
+      return true;
+    }
+
+    // Handle streaming events (e.g. response.file_search_call.completed)
+    if (typeof call.type === 'string') {
+      return (
+        call.type.includes('file_search') || call.type.includes('web_search')
+      );
+    }
+
+    return false;
+  });
+
+  if (!searchToolUsed) {
     warnings.push(
-      'No file search tool was used - answer may not be grounded in knowledge base'
+      'No search tool was used - answer may not be grounded in knowledge base'
     );
     confidence = 'low';
   }
@@ -54,7 +91,6 @@ export function validateAnswer(
     'could be',
   ];
 
-  const lowerAnswer = answer.toLowerCase();
   const hasUncertainty = uncertaintyPhrases.some((phrase) =>
     lowerAnswer.includes(phrase)
   );
@@ -103,7 +139,7 @@ export function validateAnswer(
     lowerAnswer.includes(phrase)
   );
 
-  if (isGeneric && !fileSearchUsed) {
+  if (isGeneric && !searchToolUsed) {
     warnings.push('Response appears generic without knowledge base grounding');
     confidence = 'low';
   }

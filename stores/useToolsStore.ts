@@ -78,7 +78,7 @@ const useToolsStore = create<StoreState>()(
           city: '',
           region: '',
         },
-        allowed_domains: [],
+        allowed_domains: ['opiskelijan.metropolia.fi'],
       },
       mcpConfig: {
         server_label: '',
@@ -92,7 +92,7 @@ const useToolsStore = create<StoreState>()(
         // Lock to always true for accuracy - parameter ignored
         set({ fileSearchEnabled: true });
       },
-      webSearchEnabled: false,
+      webSearchEnabled: true,
       setWebSearchEnabled: (enabled) => {
         set({ webSearchEnabled: enabled });
       },
