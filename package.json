@@ -6,7 +6,10 @@
     "dev": "next dev -p 3004",
     "build": "next build",
     "start": "next start -p 3004",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:stream:v2": "node ./test/streaming-v2-verifier.mjs",
+    "test:gateway-mapper": "node --test ./test/gateway-event-mapper.test.mjs",
+    "test:gateway-stream": "node ./test/gateway-streaming-harness.mjs"
   },
   "dependencies": {
     "@npmcli/fs": "^4.0.0",
