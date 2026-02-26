@@ -107,12 +107,12 @@ export async function POST(request: Request): Promise<Response> {
 
     const stream = new ReadableStream({
       async start(controller) {
-        const collectedSources = new Set<string>();
+        const collectedSources: any[] = [];
         try {
           for await (const event of events) {
             const mapped = mapOpenAIEventToFrontendSse(event);
             for (const source of mapped.sources) {
-              collectedSources.add(source);
+              collectedSources.push(source);
             }
 
             if (mapped.sse) {
@@ -120,7 +120,7 @@ export async function POST(request: Request): Promise<Response> {
             }
           }
 
-          const sourcesSuffix = buildSourcesSuffix(Array.from(collectedSources));
+          const sourcesSuffix = buildSourcesSuffix(collectedSources);
           if (sourcesSuffix) {
             controller.enqueue(
               toSseLine({

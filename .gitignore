@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# website sync auth session
+storageState.json
+website-sync-manifest.json
