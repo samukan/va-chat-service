@@ -2,11 +2,16 @@
   "name": "responses-starter-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev -p 3004",
-    "build": "next build",
-    "start": "next start -p 3004",
+    "dev": "tsx watch src/bootstrap/server.ts",
+    "build": "tsc -p tsconfig.server.json",
+    "start": "node dist/bootstrap/server.js",
+    "dev:legacy-next": "next dev -p 3004",
+    "build:legacy-next": "next build",
+    "start:legacy-next": "next start -p 3004",
     "lint": "next lint",
+    "test:phase1": "node --import tsx --test ./tests/chat.smoke.test.ts ./tests/auth.smoke.test.ts",
     "test:stream:v2": "node ./test/streaming-v2-verifier.mjs",
     "test:gateway-mapper": "node --test ./test/gateway-event-mapper.test.mjs",
     "test:gateway-stream": "node ./test/gateway-streaming-harness.mjs",
@@ -29,6 +34,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "dotenv": "^17.3.1",
+    "fastify": "^5.6.1",
     "highlight.js": "^11.11.1",
     "katex": "^0.16.22",
     "lucide-react": "^0.441.0",
@@ -36,6 +42,7 @@
     "openai": "^4.87.3",
     "openid-client": "^6.6.4",
     "partial-json": "^0.1.7",
+    "pino": "^9.9.4",
     "react": "^18",
     "react-dom": "^18",
     "react-dropzone": "^14.3.8",
@@ -58,6 +65,7 @@
     "playwright": "^1.58.2",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.20.5",
     "typescript": "^5.6.2"
   }
 }
