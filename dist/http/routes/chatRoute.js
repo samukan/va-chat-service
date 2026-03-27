@@ -4,6 +4,53 @@ function writeSseEvent(reply, event, payload) {
     reply.raw.write(`event: ${event}\n`);
     reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`);
 }
+function latestUserMessage(messages) {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+        const message = messages[i];
+        if (message?.role === 'user') {
+            return message.content;
+        }
+    }
+    return null;
+}
+function buildContext(chunks) {
+    if (!chunks.length) {
+        return 'Tietokannasta ei loytynyt relevanttia tietoa kysymykseen.';
+    }
+    return chunks
+        .map((chunk, index) => {
+        return [
+            `[Lahde ${index + 1}]`,
+            `doc_id: ${chunk.doc_id}`,
+            `source: ${chunk.source ?? 'unknown'}`,
+            `content: ${chunk.text}`,
+        ].join('\n');
+    })
+        .join('\n\n');
+}
+function buildRagMessages(messages, chunks) {
+    const systemPrefix = [
+        {
+            role: 'system',
+            content: 'Vastaa kysymykseen vain annetun kontekstin perusteella. Jos konteksti ei riita, sano se lyhyesti.' +
+                ' Pida vastaus tiiviina ja asiallisena.',
+        },
+        {
+            role: 'system',
+            content: `Konteksti:\n${buildContext(chunks)}`,
+        },
+    ];
+    return [...systemPrefix, ...messages];
+}
+function buildCitationToken(chunks) {
+    const sources = Array.from(new Set(chunks
+        .map((chunk) => (typeof chunk.source === 'string' ? chunk.source.trim() : ''))
+        .filter((value) => value.length > 0)));
+    if (!sources.length) {
+        return null;
+    }
+    return `\n\nLahteet:\n${sources.map((source) => `- ${source}`).join('\n')}`;
+}
 export async function registerChatRoute(app) {
     app.post('/v1/chat', { preHandler: app.requireS2S }, async (request, reply) => {
         const parsed = chatRequestSchema.safeParse(request.body);
@@ -11,13 +58,20 @@ export async function registerChatRoute(app) {
             throw new HttpError(400, 'BAD_REQUEST', 'Invalid request body');
         }
         const { messages, options } = parsed.data;
+        const tenantId = request.userContext?.tenant_id;
+        if (!tenantId) {
+            throw new HttpError(401, 'UNAUTHORIZED', 'Missing tenant context');
+        }
+        const userQuery = latestUserMessage(messages);
+        if (!userQuery) {
+            throw new HttpError(400, 'BAD_REQUEST', 'At least one user message is required');
+        }
         app.log.info({
             correlation_id: request.correlationId,
             user_id: request.userContext?.user_id,
-            tenant_id: request.userContext?.tenant_id,
+            tenant_id: tenantId,
             roles: request.userContext?.roles ?? [],
-            rag_enabled: app.config.flags.ragEnabled,
-            inject_context_enabled: app.config.flags.injectContextEnabled
+            top_k: options?.top_k ?? app.config.milvus.topK,
         }, 'chat request accepted');
         reply.raw.setHeader('Content-Type', 'text/event-stream');
         reply.raw.setHeader('Cache-Control', 'no-cache');
@@ -28,20 +82,44 @@ export async function registerChatRoute(app) {
         const onClose = () => abortController.abort();
         request.raw.on('close', onClose);
         try {
-            if (app.config.flags.ragEnabled) {
-                app.log.info({
-                    correlation_id: request.correlationId,
-                    feature: 'rag',
-                    enabled: true
-                }, 'RAG feature flag enabled but Phase 1 runs plain chat mode');
+            let retrievedChunks;
+            try {
+                retrievedChunks = await app.retrievalClient.search({
+                    query: userQuery,
+                    tenantId,
+                    topK: options?.top_k,
+                    correlationId: request.correlationId,
+                    signal: abortController.signal,
+                });
             }
+            catch (error) {
+                if (abortController.signal.aborted) {
+                    return;
+                }
+                app.log.error({
+                    correlation_id: request.correlationId,
+                    tenant_id: tenantId,
+                    err: error,
+                }, 'retrieval failed');
+                writeSseEvent(reply, 'error', {
+                    message: 'RAG retrieval unavailable',
+                    code: 'RAG_UNAVAILABLE',
+                });
+                reply.raw.end();
+                return;
+            }
+            const ragMessages = buildRagMessages(messages, retrievedChunks);
             for await (const token of app.chatGateway.streamText({
-                messages,
+                messages: ragMessages,
                 temperature: options?.temperature,
                 maxOutputTokens: options?.max_output_tokens,
-                signal: abortController.signal
+                signal: abortController.signal,
             })) {
                 writeSseEvent(reply, 'token', { t: token });
+            }
+            const citationToken = buildCitationToken(retrievedChunks);
+            if (citationToken) {
+                writeSseEvent(reply, 'token', { t: citationToken });
             }
             writeSseEvent(reply, 'done', { ok: true });
             reply.raw.end();

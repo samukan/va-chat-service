@@ -9,7 +9,8 @@ export const chatRequestSchema = z.object({
   messages: z.array(messageSchema).min(1).max(50),
   options: z.object({
     temperature: z.number().min(0).max(2).optional(),
-    max_output_tokens: z.number().int().positive().max(4096).optional()
+    max_output_tokens: z.number().int().positive().max(4096).optional(),
+    top_k: z.number().int().min(1).max(20).optional()
   }).optional()
 });
 

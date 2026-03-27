@@ -10,15 +10,8 @@ This service is a new clean-room implementation for Go Exchange AI chat platform
 - `GET /metrics`
 - Service-to-service HMAC guard for `/v1/*`
 - Structured JSON logging with correlation id
-- Feature flags (stubbed for later phases)
-  - `RAG_ENABLED=0` (default)
-  - `INJECT_CONTEXT_ENABLED=0` (default)
-
-## Not in Phase 1
-
-- Milvus/RAG retrieval implementation
-- Ingest/sync logic implementation
-- Crawl/scheduler implementation
+- Milvus-backed retrieval before answer generation (`/api/v1/vector/search`)
+- Source list appended at the end of streamed answer (`Lahteet:`)
 
 `/v1/search`, `/v1/ingest`, and `DELETE /v1/docs/:doc_id` exist as `501 Not Implemented` stubs.
 
@@ -39,14 +32,16 @@ OPENAI_API_KEY=sk-...
 OPENAI_BASE_URL=
 OPENAI_CHAT_MODEL=gpt-4.1-mini
 
+MILVUS_API_URL=http://localhost:3006
+MILVUS_SOURCE_SECRET=replace-with-milvus-shared-secret
+RAG_TOP_K=5
+RAG_TIMEOUT_MS=12000
+
 S2S_HMAC_SECRET=replace-with-long-random-secret
 S2S_MAX_SKEW_SEC=60
 NONCE_TTL_SEC=300
 
 HTTP_MAX_BODY_BYTES=262144
-
-RAG_ENABLED=0
-INJECT_CONTEXT_ENABLED=0
 
 # Optional: protect /metrics with header x-metrics-token
 METRICS_AUTH_TOKEN=
@@ -102,7 +97,8 @@ Request body:
   ],
   "options": {
     "temperature": 0.2,
-    "max_output_tokens": 512
+    "max_output_tokens": 512,
+    "top_k": 5
   }
 }
 ```

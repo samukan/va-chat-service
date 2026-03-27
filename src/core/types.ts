@@ -10,6 +10,7 @@ export interface ChatRequestBody {
   options?: {
     temperature?: number;
     max_output_tokens?: number;
+    top_k?: number;
   };
 }
 

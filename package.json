@@ -7,19 +7,8 @@
     "dev": "tsx watch src/bootstrap/server.ts",
     "build": "tsc -p tsconfig.server.json",
     "start": "node dist/bootstrap/server.js",
-    "dev:legacy-next": "next dev -p 3004",
-    "build:legacy-next": "next build",
-    "start:legacy-next": "next start -p 3004",
     "lint": "next lint",
-    "test:phase1": "node --import tsx --test ./tests/chat.smoke.test.ts ./tests/auth.smoke.test.ts",
-    "test:stream:v2": "node ./test/streaming-v2-verifier.mjs",
-    "test:gateway-mapper": "node --test ./test/gateway-event-mapper.test.mjs",
-    "test:gateway-stream": "node ./test/gateway-streaming-harness.mjs",
-    "test:website-sync": "node --test ./test/website-sync-dry.test.mjs ./test/website-sync-manifest.test.mjs ./test/website-sync-uploader.test.mjs ./test/website-sync-cleanup.test.mjs",
-    "website:auth:record": "node ./scripts/website-auth-record.mjs",
-    "website:sync:dry": "node ./scripts/website-sync-dry.mjs",
-    "website:sync": "node ./scripts/website-sync.mjs",
-    "website:sync:cleanup": "node ./scripts/website-sync-cleanup.mjs"
+    "test:phase1": "node --import tsx --test ./tests/chat.smoke.test.ts ./tests/auth.smoke.test.ts"
   },
   "dependencies": {
     "@npmcli/fs": "^4.0.0",

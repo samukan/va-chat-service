@@ -4,6 +4,7 @@ import { loadConfig } from './core/config.js';
 import { buildLoggerOptions } from './core/logger.js';
 import { InMemoryMetrics } from './telemetry/metrics.js';
 import { OpenAIChatGateway, type ChatGateway } from './llm/openaiChatGateway.js';
+import { MilvusRetrievalClient, type RetrievalClient } from './retrieval/milvusRetrievalClient.js';
 import { registerBaseHooks, registerJsonBodyParser } from './bootstrap/plugins.js';
 import { registerChatRoute } from './http/routes/chatRoute.js';
 import { registerHealthRoute } from './http/routes/healthRoute.js';
@@ -16,12 +17,14 @@ declare module 'fastify' {
     config: ReturnType<typeof loadConfig>;
     metrics: InMemoryMetrics;
     chatGateway: ChatGateway;
+    retrievalClient: RetrievalClient;
     requireS2S: (request: import('fastify').FastifyRequest) => Promise<void>;
   }
 }
 
 interface BuildAppOverrides {
   chatGateway?: ChatGateway;
+  retrievalClient?: RetrievalClient;
 }
 
 export async function buildApp(overrides: BuildAppOverrides = {}) {
@@ -37,6 +40,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}) {
   app.decorate('config', config);
   app.decorate('metrics', new InMemoryMetrics());
   app.decorate('chatGateway', overrides.chatGateway ?? new OpenAIChatGateway(config));
+  app.decorate('retrievalClient', overrides.retrievalClient ?? new MilvusRetrievalClient(config));
   app.decorate('requireS2S', createS2SGuard(config));
 
   registerJsonBodyParser(app);
